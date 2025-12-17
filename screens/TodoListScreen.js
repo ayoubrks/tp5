@@ -1,51 +1,65 @@
-import { useState, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { addTodo } from "../store/todosSlice";
 import AppBar from "../components/AppBar";
 
 export default function TodoListScreen({ navigation }) {
-  const [todos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const todos = useSelector(state => state.todos);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    setTimeout(() => {
-      setTodos([
+    if (todos.length === 0) {
+      const initialTodos = [
         { id: 1, title: "Faire les courses" },
         { id: 2, title: "Sortir le chien" },
-        { id: 3, title: "Coder une app RN" },
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontSize: 20 }}>Chargement...</Text>
-      </View>
-    );
-  }
+        { id: 3, title: "Coder une app RN" }
+      ];
+      initialTodos.forEach(todo => dispatch(addTodo(todo)));
+    }
+  }, [todos.length, dispatch]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <AppBar title="Mes tâches" />
-
+      
       <FlatList
         data={todos}
-        keyExtractor={(i) => i.id.toString()}
-        contentContainerStyle={{ padding: 20 }}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("Détails", {
-                id: item.id,
-                title: item.title,
-              })
-            }
+            style={styles.item}
+            onPress={() => navigation.navigate("Détails", item)}
+            activeOpacity={0.7}
           >
-            <Text style={{ padding: 10, fontSize: 18 }}>{item.title}</Text>
+            {/* ✅ Texte DANS <Text> */}
+            <Text style={styles.title}>{item.title}</Text>
           </TouchableOpacity>
         )}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  item: {
+    backgroundColor: "#fff",
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  title: {
+    fontSize: 16,
+    color: "#333",
+  },
+});

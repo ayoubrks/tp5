@@ -1,17 +1,64 @@
-import { View, Text } from "react-native";
-import AppBar from "../components/AppBar";
+import { View, Text, Button, StyleSheet, Alert } from "react-native"; 
+import { useDispatch } from "react-redux"; 
+import { removeTodo } from "../store/todosSlice"; 
 
-export default function TodoDetailsScreen({ route }) {
-  const { id, title } = route.params;
+export default function TodoDetailsScreen({ route, navigation }) { 
+  const { id, title } = route.params; 
+  const dispatch = useDispatch(); 
 
-  return (
-    <View style={{ flex: 1 }}>
-      <AppBar title="Détails" />
+  const handleDelete = () => { 
+    // ✅ Alert de confirmation
+    Alert.alert(
+      "Supprimer",
+      "Voulez-vous vraiment supprimer cette tâche ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Supprimer", 
+          style: "destructive",
+          onPress: () => {
+            dispatch(removeTodo(id)); 
+            navigation.goBack(); 
+          }
+        }
+      ]
+    );
+  }; 
 
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontSize: 30 }}>{title}</Text>
-        <Text style={{ fontSize: 18, marginTop: 10 }}>ID : {id}</Text>
+  return ( 
+    <View style={styles.container}> 
+      {/* ✅ Texte DANS <Text> */}
+      <Text style={styles.title}>{title}</Text> 
+      <Text style={styles.id}>ID: {id}</Text> 
+
+      <View style={styles.buttonContainer}>
+        <Button 
+          title="Supprimer cette tâche" 
+          color="red" 
+          onPress={handleDelete} 
+        /> 
       </View>
-    </View>
-  );
-}
+    </View> 
+  ); 
+} 
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  id: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 30,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+});
