@@ -1,45 +1,55 @@
-import 'react-native-gesture-handler';
+import { useEffect, useState, useContext } from "react";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { initDB } from "./services/database";
+import { ThemeProvider, ThemeContext } from "./context/ThemeContext";
+import TodoListOfflineScreen from "./screens/TodoListOfflineScreen";
 
-import React, { useContext, useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Provider } from "react-redux";  // ✅ AJOUTE CECI
-import { store } from "./store/store";    // ✅ AJOUTE CECI
-
-import AuthProvider, { AuthContext } from './context/AuthContext';
-import AppDrawer from './navigation/AppDrawer';
-import LoginScreen from './screens/LoginScreen';
-
-const Stack = createStackNavigator();
-
-function RootNavigator() {
-  const { user } = useContext(AuthContext);
-
-  // ✅ Plus propre avec des options
-  const screenOptions = { headerShown: false };
+function MainApp() {
+  const { theme } = useContext(ThemeContext);
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
-      {user ? (
-        <Stack.Screen name="AppDrawer" component={AppDrawer} />
-      ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
-      )}
-    </Stack.Navigator>
+    <View
+      style={[
+        styles.container,
+        theme === "dark" ? styles.dark : styles.light,
+      ]}
+    >
+      <TodoListOfflineScreen />
+    </View>
   );
 }
 
 export default function App() {
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    const prepareDb = async () => {
+      await initDB(); // attendre SQLite
+      setDbReady(true); // OK pour afficher l'app
+    };
+    prepareDb();
+  }, []);
+
+  if (!dbReady) {
+    return <ActivityIndicator size="large" />;
+  }
+
   return (
-    <AuthProvider>
-      <Provider store={store}> {/* ✅ ENVELOPPE AVEC PROVIDER */}
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <RootNavigator />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </Provider>
-    </AuthProvider>
+    <ThemeProvider>
+      <MainApp />
+    </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 40,
+  },
+  light: {
+    backgroundColor: "#ffffff",
+  },
+  dark: {
+    backgroundColor: "#121212",
+  },
+});
