@@ -1,65 +1,57 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { useEffect } from "react";
-import { addTodo } from "../store/todosSlice";
+import { View, Text, FlatList, Button, TextInput } from "react-native";
+import { useEffect, useContext, useState } from "react";
+import { useTodoStore } from "../store/useTodoStore";
+import { AuthContext } from "../context/AuthContext";
 import AppBar from "../components/AppBar";
 
-export default function TodoListScreen({ navigation }) {
-  const todos = useSelector(state => state.todos);
-  const dispatch = useDispatch();
+export default function TodoListScreen() {
+  const { user } = useContext(AuthContext);
+  const { todos, loadTodos, addTodo } = useTodoStore();
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
-    if (todos.length === 0) {
-      const initialTodos = [
-        { id: 1, title: "Faire les courses" },
-        { id: 2, title: "Sortir le chien" },
-        { id: 3, title: "Coder une app RN" }
-      ];
-      initialTodos.forEach(todo => dispatch(addTodo(todo)));
+    if (user) {
+      loadTodos(user.uid);
     }
-  }, [todos.length, dispatch]);
+  }, [user]);
+
+  const handleAddTodo = () => {
+    if (!title.trim()) return;
+    addTodo(user.uid, title);
+    setTitle("");
+  };
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <AppBar title="Mes tâches" />
-      
+
+      {/* Champ de saisie */}
+      <View style={{ padding: 15 }}>
+        <TextInput
+          placeholder="Nouvelle tâche..."
+          value={title}
+          onChangeText={setTitle}
+          style={{
+            borderWidth: 1,
+            borderColor: "#ccc",
+            padding: 10,
+            borderRadius: 6,
+            marginBottom: 10,
+          }}
+        />
+        <Button title="Ajouter la tâche" onPress={handleAddTodo} />
+      </View>
+
+      {/* Liste */}
       <FlatList
         data={todos}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(i) => i.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => navigation.navigate("Détails", item)}
-            activeOpacity={0.7}
-          >
-            {/* ✅ Texte DANS <Text> */}
-            <Text style={styles.title}>{item.title}</Text>
-          </TouchableOpacity>
+          <Text style={{ padding: 15, fontSize: 16 }}>
+            • {item.title}
+          </Text>
         )}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  item: {
-    backgroundColor: "#fff",
-    padding: 16,
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  title: {
-    fontSize: 16,
-    color: "#333",
-  },
-});
